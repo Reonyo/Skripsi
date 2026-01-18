@@ -1,2 +1,15 @@
-# Pretraining configuration
-# TODO: Add pretraining configurations here
+training:
+  num_epochs: 5
+  batch_size: 16
+  learning_rate: 5e-4
+  weight_decay: 0.01
+  warmup_steps: 10000
+  rtd_loss_weight: 1.0
+  gradient_clipping: 1.0
+
+data:
+  max_length: 128
+
+token:
+  mask_token_id: 4
+  special_token_ids: [0, 1, 2, 3]  # PAD, CLS, SEP, UNK

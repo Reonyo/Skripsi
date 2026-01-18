@@ -1,2 +1,15 @@
-# Model configuration
-# TODO: Add model configurations here
+generator:
+  num_layers: 4
+  d_model: 256
+  num_heads: 4
+  head_dim: 64
+  d_ffn: 1024
+  dropout: 0.1
+
+discriminator:
+  num_layers: 8
+  d_model: 512
+  num_heads: 8
+  head_dim: 64
+  d_ffn: 2048
+  dropout: 0.1

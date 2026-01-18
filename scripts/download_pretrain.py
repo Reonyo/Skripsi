@@ -1,7 +1,7 @@
 import os
 import argparse
 from typing import Iterable
-from datasets import load_dataset, Dataset
+from datasets import load_dataset
 
 def ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
