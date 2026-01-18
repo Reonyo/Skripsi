@@ -45,9 +45,9 @@ if __name__ == "__main__":
 
     # Trainer (positional args to satisfy Pylance)
     trainer = BpeTrainer(
-    vocab_size=args.vocab_size, 
-    min_frequency=args.min_frequency,
-    special_tokens=[
+    vocab_size=args.vocab_size,  # type: ignore
+    min_frequency=args.min_frequency, # type: ignore
+    special_tokens=[ # type: ignore
         "[PAD]",
         "[UNK]",
         "[CLS]",
