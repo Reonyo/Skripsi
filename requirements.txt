@@ -1,0 +1,19 @@
+# Deep Learning
+torch>=2.1
+
+# NLP
+transformers>=4.38
+datasets>=2.18
+tokenizers>=0.15.2
+
+# Utils
+pyyaml>=6.0
+tqdm
+numpy>=1.26
+
+# Evaluation
+scikit-learn
+scipy
+
+# Logging
+tensorboard
