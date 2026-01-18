@@ -77,7 +77,7 @@ def download_wikipedia(train_dir: str, val_dir: str,
     train_texts, val_texts = [], []
 
     for item in dataset:
-        text = item.get("text", "").strip()
+        text = item.get("text", "").strip() # type: ignore
         if not text:
             continue
 
