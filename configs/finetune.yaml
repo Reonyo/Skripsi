@@ -1,2 +1,49 @@
-# Fine-tuning configuration
-# TODO: Add fine-tuning configurations here
+training:
+  num_epochs: 3
+  batch_size: 32
+  learning_rate: 3.0e-5
+  weight_decay: 0.01
+  validate_every: 1       # evaluasi tiap epoch
+  log_every: 100          # simpan loss train tiap 100 step (lebih efisien di run besar)
+
+data:
+  max_length: 128
+
+task:
+  name: SST2              # default task, bisa diganti ke task lain di bawah
+
+# Daftar semua task GLUE beserta jumlah label
+tasks:
+  SST2:
+    num_labels: 2
+    type: classification
+  MRPC:
+    num_labels: 2
+    type: classification
+  QQP:
+    num_labels: 2
+    type: classification
+  QNLI:
+    num_labels: 2
+    type: classification
+  RTE:
+    num_labels: 2
+    type: classification
+  WNLI:
+    num_labels: 2
+    type: classification
+  CoLA:
+    num_labels: 2
+    type: classification
+  MNLI:
+    num_labels: 3   # matched/mismatched share head; label space 3 (entailment/neutral/contradiction)
+    type: classification
+  STSB:
+    num_labels: 1
+    type: regression
+
+token:
+  special_token_ids: [0, 1, 2, 3]  # PAD, CLS, SEP, UNK
+
+checkpoint:
+  pretrained_path: outputs/pretrain/pretrained_model.pt
