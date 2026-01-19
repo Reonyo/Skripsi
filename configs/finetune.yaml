@@ -1,13 +1,14 @@
 training:
-  num_epochs: 3
+  num_epochs: 20                # Max epochs 
   batch_size: 32
   learning_rate: 0.00003
   weight_decay: 0.01
-  validate_every: 1       # evaluasi tiap epoch
-  log_every: 100          # simpan loss train tiap 100 step (lebih efisien di run besar)
+  validate_every: 1             # evaluasi tiap epoch
+  log_every: 100                # simpan loss train tiap 100 step
+  early_stopping_patience: 3    # stop jika val loss tidak improve selama 3 epoch
 
 data:
-  max_length: 128
+  max_length: 256
 
 task:
   name: SST2              # default task, bisa diganti ke task lain di bawah

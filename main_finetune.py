@@ -141,6 +141,7 @@ def main():
         weight_decay=train_params["weight_decay"],
         validate_every=train_params.get("validate_every", 1),
         log_every=train_params.get("log_every", 50),
+        early_stopping_patience=train_params.get("early_stopping_patience", 3),
         output_dir=str(output_dir),
     )
 

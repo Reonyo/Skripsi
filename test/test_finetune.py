@@ -82,6 +82,7 @@ def run_task(task_name: str, num_labels: int, task_type: str, disc_cfg: dict, ch
         weight_decay=0.0,
         validate_every=1,
         log_every=1,
+        early_stopping_patience=1,  # test dengan patience 1
         output_dir=str(out_dir),
     )
 

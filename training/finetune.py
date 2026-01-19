@@ -26,6 +26,7 @@ def finetune(
     weight_decay: float,
     validate_every: int = 1,     # validasi per epoch (default GLUE)
     log_every: int = 50,         # simpan loss train per N step
+    early_stopping_patience: int = 3,  # early stopping dengan 3 epoch patience
     output_dir: str = "outputs/finetune",
 ):
     """
@@ -37,9 +38,20 @@ def finetune(
 
     Task Head:
     - Linear layer di atas [CLS] representation
+    
+    Early Stopping:
+    - Monitor validation loss
+    - Stop jika loss tidak improve selama `early_stopping_patience` epoch
+    - Max epoch tetap num_epochs
     """
 
     os.makedirs(output_dir, exist_ok=True)
+
+    # ==================================================
+    # EARLY STOPPING TRACKING
+    # ==================================================
+    best_val_loss = float('inf')
+    patience_counter = 0
 
     # ==================================================
     # CSV LOGGER
@@ -225,4 +237,19 @@ def finetune(
                 f"Loss: {avg_val_loss:.4f}"
             )
 
-    print(f"\n✅ Finetuning selesai untuk task {task_name}")
+            # ==================================================
+            # EARLY STOPPING CHECK
+            # ==================================================
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                patience_counter = 0
+                print(f"  [IMPROVE] Val loss improved to {best_val_loss:.4f}")
+            else:
+                patience_counter += 1
+                print(f"  [NO IMPROVE] Patience: {patience_counter}/{early_stopping_patience}")
+                
+                if patience_counter >= early_stopping_patience:
+                    print(f"[EARLY STOP] No improvement for {early_stopping_patience} epochs. Stopping.")
+                    break
+
+    print(f"\n[OK] Finetuning selesai untuk task {task_name}")
