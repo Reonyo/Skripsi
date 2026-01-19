@@ -48,11 +48,11 @@ def pretrain(
 
     init_csv_logger(
         train_csv,
-        ["global_step", "epoch", "mlm_loss", "rtd_loss", "total_loss"],
+        ["global_step", "mlm_loss", "rtd_loss", "total_loss"],
     )
     init_csv_logger(
         val_csv,
-        ["global_step", "epoch", "mlm_loss", "rtd_loss", "total_loss"],
+        ["global_step", "mlm_loss", "rtd_loss", "total_loss", "mlm_acc", "rtd_acc"],
     )
 
     # ======================================================
@@ -170,7 +170,6 @@ def pretrain(
                     train_csv,
                     [
                         global_step,
-                        0,  # epoch no longer relevant in step-based training
                         f"{mlm_loss.item():.4f}",
                         f"{rtd_loss.item():.4f}",
                         f"{total_loss.item():.4f}",
@@ -188,6 +187,8 @@ def pretrain(
                 discriminator.eval()
 
                 val_mlm, val_rtd, val_total = 0.0, 0.0, 0.0
+                val_mlm_correct, val_rtd_correct = 0, 0
+                val_mlm_total, val_rtd_total = 0, 0
                 n_val = 0
 
                 with torch.no_grad():
@@ -214,6 +215,13 @@ def pretrain(
                             v_mlm_labels.view(-1),
                         )
 
+                        # MLM Accuracy: only count masked positions (label != -100)
+                        mlm_preds = v_gen_logits.argmax(dim=-1).view(-1)  # Flatten predictions
+                        mlm_labels_flat = v_mlm_labels.view(-1)
+                        mlm_mask = mlm_labels_flat != -100
+                        val_mlm_correct += (mlm_preds[mlm_mask] == mlm_labels_flat[mlm_mask]).sum().item()
+                        val_mlm_total += mlm_mask.sum().item()
+
                         # RTD
                         v_rep_ids, v_rtd_labels = replace_with_generator(
                             v_input_ids,
@@ -233,6 +241,11 @@ def pretrain(
                             v_rtd_labels.float().view(-1),
                         )
 
+                        # RTD Accuracy: binary classification (replaced=1, original=0)
+                        rtd_preds = (v_disc_logits > 0).long()
+                        val_rtd_correct += (rtd_preds == v_rtd_labels).sum().item()
+                        val_rtd_total += v_rtd_labels.numel()
+
                         v_total = v_mlm + rtd_loss_weight * v_rtd
 
                         val_mlm += v_mlm.item()
@@ -243,11 +256,18 @@ def pretrain(
                 val_mlm /= n_val
                 val_rtd /= n_val
                 val_total /= n_val
+                
+                # Calculate accuracies
+                mlm_acc = val_mlm_correct / val_mlm_total if val_mlm_total > 0 else 0.0
+                rtd_acc = val_rtd_correct / val_rtd_total if val_rtd_total > 0 else 0.0
 
                 append_csv(
                     val_csv,
-                    [global_step, 0, f"{val_mlm:.4f}", f"{val_rtd:.4f}", f"{val_total:.4f}"],
+                    [global_step, f"{val_mlm:.4f}", f"{val_rtd:.4f}", f"{val_total:.4f}", 
+                     f"{mlm_acc:.4f}", f"{rtd_acc:.4f}"],
                 )
+                
+                print(f"[VAL] Step {global_step} | MLM Loss: {val_mlm:.4f} Acc: {mlm_acc:.4f} | RTD Loss: {val_rtd:.4f} Acc: {rtd_acc:.4f}")
 
                 # --------------------------------------------------
                 # SAVE CHECKPOINT

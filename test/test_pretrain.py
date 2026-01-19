@@ -107,7 +107,7 @@ def main():
         output_dir="test/outputs/test_pretrain",
     )
 
-    print("✅ TEST PRETRAIN SELESAI")
+    print("[OK] TEST PRETRAIN SELESAI")
 
 
 if __name__ == "__main__":
