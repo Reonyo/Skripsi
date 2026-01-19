@@ -1,30 +1,10 @@
 import os
-import csv
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from tqdm import tqdm
 from training.masking import create_mlm_inputs, replace_with_generator
-
-
-def _init_csv_logger(path, header):
-    """
-    Membuat file CSV dan menuliskan header jika file belum ada.
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    if not os.path.exists(path):
-        with open(path, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-
-
-def _append_csv(path, row):
-    """
-    Menambahkan satu baris ke file CSV.
-    """
-    with open(path, "a", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(row)
+from training.utils.csv_logger import init_csv_logger, append_csv
 
 
 def pretrain(
@@ -66,11 +46,11 @@ def pretrain(
     train_csv = os.path.join(output_dir, "train_log.csv")
     val_csv = os.path.join(output_dir, "val_log.csv")
 
-    _init_csv_logger(
+    init_csv_logger(
         train_csv,
         ["global_step", "epoch", "mlm_loss", "rtd_loss", "total_loss"],
     )
-    _init_csv_logger(
+    init_csv_logger(
         val_csv,
         ["global_step", "epoch", "mlm_loss", "rtd_loss", "total_loss"],
     )
@@ -176,7 +156,7 @@ def pretrain(
             # 6. LOG TRAIN (periodic)
             # --------------------------------------------------
             if global_step % log_every == 0:
-                _append_csv(
+                append_csv(
                     train_csv,
                     [
                         global_step,
@@ -258,7 +238,7 @@ def pretrain(
                 val_rtd /= n_val
                 val_total /= n_val
 
-                _append_csv(
+                append_csv(
                     val_csv,
                     [global_step, epoch + 1, f"{val_mlm:.4f}", f"{val_rtd:.4f}", f"{val_total:.4f}"],
                 )

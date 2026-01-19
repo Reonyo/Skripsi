@@ -1,33 +1,10 @@
 import os
-import csv
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from tqdm import tqdm
-
-
-# ======================================================
-# UTILITAS CSV LOGGING
-# ======================================================
-
-def _init_csv_logger(path, header):
-    """
-    Membuat file CSV dan menuliskan header jika file belum ada.
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    if not os.path.exists(path):
-        with open(path, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-
-
-def _append_csv(path, row):
-    """
-    Menambahkan satu baris ke file CSV.
-    """
-    with open(path, "a", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(row)
+from training.utils.csv_logger import init_csv_logger, append_csv
+from training.utils.metrics import compute_metrics
 
 
 # ======================================================
@@ -48,6 +25,7 @@ def finetune(
     learning_rate: float,
     weight_decay: float,
     validate_every: int = 1,     # validasi per epoch (default GLUE)
+    log_every: int = 50,         # simpan loss train per N step
     output_dir: str = "outputs/finetune",
 ):
     """
@@ -69,13 +47,13 @@ def finetune(
     train_csv = os.path.join(output_dir, f"{task_name}_train_log.csv")
     val_csv = os.path.join(output_dir, f"{task_name}_val_log.csv")
 
-    _init_csv_logger(
+    init_csv_logger(
         train_csv,
         ["epoch", "step", "loss"],
     )
-    _init_csv_logger(
+    init_csv_logger(
         val_csv,
-        ["epoch", "val_loss"],
+        ["epoch", "val_loss", "val_accuracy", "val_f1", "val_mcc", "val_pearson", "val_spearman"],
     )
 
     # ==================================================
@@ -132,7 +110,7 @@ def finetune(
             # ==================================================
             embeddings = embedding_layer(input_ids)
 
-            encoder_outputs = encoder(
+            encoder_outputs = encoder.encoder(
                 embeddings,
                 attention_mask=attention_mask,
             )
@@ -161,10 +139,11 @@ def finetune(
             # ==================================================
             # LOG TRAIN
             # ==================================================
-            _append_csv(
-                train_csv,
-                [epoch, global_step, loss.item()],
-            )
+            if global_step % log_every == 0:
+                append_csv(
+                    train_csv,
+                    [epoch + 1, global_step, loss.item()],
+                )
 
             pbar.set_postfix(loss=f"{loss.item():.4f}")
 
@@ -177,6 +156,8 @@ def finetune(
 
             total_val_loss = 0.0
             steps = 0
+            all_logits = []
+            all_labels = []
 
             with torch.no_grad():
                 for vbatch in val_dataloader:
@@ -185,7 +166,7 @@ def finetune(
                     v_labels = vbatch["labels"].to(device)
 
                     v_embeds = embedding_layer(v_input_ids)
-                    v_out = encoder(v_embeds, attention_mask=v_attention_mask)
+                    v_out = encoder.encoder(v_embeds, attention_mask=v_attention_mask)
                     v_cls = v_out[:, 0, :]
                     v_logits = task_head(v_cls)
 
@@ -200,11 +181,26 @@ def finetune(
                     total_val_loss += v_loss.item()
                     steps += 1
 
+                    all_logits.append(v_logits.detach().cpu())
+                    all_labels.append(v_labels.detach().cpu())
+
             avg_val_loss = total_val_loss / steps
 
-            _append_csv(
+            logits_cat = torch.cat(all_logits, dim=0)
+            labels_cat = torch.cat(all_labels, dim=0)
+            metrics = compute_metrics(task_name, num_labels, logits_cat, labels_cat)
+
+            append_csv(
                 val_csv,
-                [epoch, avg_val_loss],
+                [
+                    epoch + 1,
+                    avg_val_loss,
+                    metrics["val_accuracy"],
+                    metrics["val_f1"],
+                    metrics["val_mcc"],
+                    metrics["val_pearson"],
+                    metrics["val_spearman"],
+                ],
             )
 
             # ==================================================
