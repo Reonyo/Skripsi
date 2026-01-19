@@ -98,8 +98,8 @@ if __name__ == "__main__":
     parser.add_argument("--overwrite", action="store_true")
 
     # TOTAL sizes (will be split 95/5)
-    parser.add_argument("--c4_total", type=int, default=125_000)
-    parser.add_argument("--wiki_total", type=int, default=5_000)
+    parser.add_argument("--c4_total", type=int, default=500_000)
+    parser.add_argument("--wiki_total", type=int, default=25_000)
 
     args = parser.parse_args()
 
