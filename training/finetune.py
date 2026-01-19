@@ -146,10 +146,6 @@ def finetune(
             cls_rep = encoder_outputs[:, 0, :]
 
             logits = task_head(cls_rep)
-            
-            # For regression tasks (STSB), scale sigmoid output (0-1) to (0-5)
-            if num_labels == 1:
-                logits = logits * 5.0
 
             # ==================================================
             # LOSS
@@ -199,10 +195,6 @@ def finetune(
                     v_out = encoder.encoder(v_embeds, attention_mask=v_attention_mask)
                     v_cls = v_out[:, 0, :]
                     v_logits = task_head(v_cls)
-                    
-                    # For regression tasks (STSB), scale sigmoid output (0-1) to (0-5)
-                    if num_labels == 1:
-                        v_logits = v_logits * 5.0
 
                     if num_labels == 1:
                         v_loss = criterion(
@@ -222,6 +214,11 @@ def finetune(
 
             logits_cat = torch.cat(all_logits, dim=0)
             labels_cat = torch.cat(all_labels, dim=0)
+            
+            # For regression tasks (STSB), clamp predictions to valid range [0, 5]
+            if num_labels == 1:
+                logits_cat = torch.clamp(logits_cat, min=0.0, max=5.0)
+            
             metrics = compute_metrics(task_name, num_labels, logits_cat, labels_cat)
 
             append_csv(
