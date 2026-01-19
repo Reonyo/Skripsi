@@ -146,6 +146,10 @@ def finetune(
             cls_rep = encoder_outputs[:, 0, :]
 
             logits = task_head(cls_rep)
+            
+            # For regression tasks (STSB), scale sigmoid output (0-1) to (0-5)
+            if num_labels == 1:
+                logits = logits * 5.0
 
             # ==================================================
             # LOSS
@@ -195,6 +199,10 @@ def finetune(
                     v_out = encoder.encoder(v_embeds, attention_mask=v_attention_mask)
                     v_cls = v_out[:, 0, :]
                     v_logits = task_head(v_cls)
+                    
+                    # For regression tasks (STSB), scale sigmoid output (0-1) to (0-5)
+                    if num_labels == 1:
+                        v_logits = v_logits * 5.0
 
                     if num_labels == 1:
                         v_loss = criterion(

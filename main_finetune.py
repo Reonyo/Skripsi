@@ -119,10 +119,20 @@ def main():
         # ======================================================
         # 6. TASK HEAD
         # ======================================================
-        task_head = torch.nn.Linear(
-            disc_cfg["d_model"],
-            num_labels,
-        )
+        # For regression tasks (STSB), use Linear + Sigmoid * 5 to constrain output to 0-5
+        # For classification, use regular Linear layer
+        if num_labels == 1:
+            # Regression: Linear -> Sigmoid -> Scale to 0-5
+            task_head = torch.nn.Sequential(
+                torch.nn.Linear(disc_cfg["d_model"], 1),
+                torch.nn.Sigmoid(),
+            )
+        else:
+            # Classification: Regular linear layer
+            task_head = torch.nn.Linear(
+                disc_cfg["d_model"],
+                num_labels,
+            )
 
         # ======================================================
         # 7. OUTPUT DIRECTORY
