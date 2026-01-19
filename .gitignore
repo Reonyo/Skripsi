@@ -185,3 +185,6 @@ data/
 
 # Test outputs
 test/outputs/
+
+# Model outputs
+outputs/
