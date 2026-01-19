@@ -18,7 +18,7 @@ def pretrain(
     mask_token_id,
     special_token_ids,
     device,
-    num_epochs,
+    max_steps,
     learning_rate,
     weight_decay,
     warmup_steps,
@@ -81,16 +81,26 @@ def pretrain(
     global_step = 0
 
     # ======================================================
-    # TRAINING LOOP
+    # TRAINING LOOP (STEP-BASED)
     # ======================================================
-    for epoch in range(num_epochs):
+    dataloader_iter = iter(dataloader)
+    
+    while global_step < max_steps:
         generator.train()
         discriminator.train()
-
-        pbar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}")
-
-        for batch in pbar:
-            global_step += 1
+        
+        try:
+            batch = next(dataloader_iter)
+        except StopIteration:
+            # Restart dataloader when epoch ends
+            dataloader_iter = iter(dataloader)
+            batch = next(dataloader_iter)
+        
+        global_step += 1
+        
+        # Show progress
+        if global_step == 1 or global_step % log_every == 0 or global_step == max_steps:
+            print(f"[Step {global_step}/{max_steps}]", end=" ")
 
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
@@ -160,19 +170,15 @@ def pretrain(
                     train_csv,
                     [
                         global_step,
-                        epoch + 1,
+                        0,  # epoch no longer relevant in step-based training
                         f"{mlm_loss.item():.4f}",
                         f"{rtd_loss.item():.4f}",
                         f"{total_loss.item():.4f}",
                     ],
                 )
+                print(f"MLM: {mlm_loss.item():.4f} | RTD: {rtd_loss.item():.4f} | Total: {total_loss.item():.4f}")
 
-            # Update progress bar every step
-            pbar.set_postfix(
-                mlm=f"{mlm_loss.item():.4f}",
-                rtd=f"{rtd_loss.item():.4f}",
-                total=f"{total_loss.item():.4f}",
-            )
+            # Continue to next step
 
             # --------------------------------------------------
             # 7. VALIDATION
@@ -240,7 +246,7 @@ def pretrain(
 
                 append_csv(
                     val_csv,
-                    [global_step, epoch + 1, f"{val_mlm:.4f}", f"{val_rtd:.4f}", f"{val_total:.4f}"],
+                    [global_step, 0, f"{val_mlm:.4f}", f"{val_rtd:.4f}", f"{val_total:.4f}"],
                 )
 
                 # --------------------------------------------------
@@ -256,12 +262,16 @@ def pretrain(
                         "gen_embedding": gen_embedding.state_dict(),
                         "disc_embedding": disc_embedding.state_dict(),
                         "step": global_step,
-                        "epoch": epoch,
                     },
                     ckpt_path,
                 )
+                print(f"Saved checkpoint: {ckpt_path}")
 
                 generator.train()
                 discriminator.train()
+        
+        # Stop training if we've reached max steps
+        if global_step >= max_steps:
+            break
 
-    print("✅ Pretraining selesai")
+    print(f"[DONE] Pretraining completed at step {global_step}/{max_steps}")

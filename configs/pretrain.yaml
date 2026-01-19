@@ -1,7 +1,7 @@
 training:
-  num_epochs: 5
+  max_steps: 100000          # Total training steps (step-based, not epoch-based)
   batch_size: 16
-  learning_rate: 5e-4
+  learning_rate: 0.0005
   weight_decay: 0.01
   warmup_steps: 10000
   rtd_loss_weight: 1.0

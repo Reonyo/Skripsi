@@ -42,7 +42,13 @@ if __name__ == "__main__":
 
         dataset = load_dataset("glue", task)
 
-        for split in SPLITS:
+        # Handle special case for MNLI which has matched/mismatched variants
+        if task == "mnli":
+            splits_to_process = ["train", "validation_matched", "validation_mismatched", "test_matched", "test_mismatched"]
+        else:
+            splits_to_process = SPLITS
+
+        for split in splits_to_process:
             if split not in dataset:
                 continue
 

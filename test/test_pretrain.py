@@ -97,7 +97,7 @@ def main():
         mask_token_id=mask_token_id,
         special_token_ids=special_token_ids,
         device=device,
-        num_epochs=train_params["num_epochs"],
+        max_steps=train_params["max_steps"],  # Step-based training
         learning_rate=train_params["learning_rate"],
         weight_decay=train_params["weight_decay"],
         warmup_steps=train_params["warmup_steps"],

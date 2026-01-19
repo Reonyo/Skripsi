@@ -1,12 +1,12 @@
 training:
-  num_epochs: 1
+  max_steps: 20         # 20 steps for quick testing
   batch_size: 8
   learning_rate: 0.0005 
   weight_decay: 0.01
-  warmup_steps: 10      
+  warmup_steps: 5       
   rtd_loss_weight: 1.0
   gradient_clipping: 1.0
-  validate_every: 5     # validasi setiap 5 steps
+  validate_every: 5     # validate every 5 steps
 
 data:
   max_length: 128
