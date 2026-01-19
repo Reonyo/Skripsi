@@ -2,7 +2,7 @@ import yaml
 import torch
 from torch.utils.data import DataLoader
 from pathlib import Path
- 
+from tokenizers import Tokenizer
 
 # Training loop
 from training.finetune import finetune
@@ -88,7 +88,8 @@ def main():
         # ======================================================
         # 4. EMBEDDING
         # ======================================================
-        vocab_size = train_dataset.vocab_size
+        tokenizer = Tokenizer.from_file("data/tokenizer/tokenizer.json")
+        vocab_size = tokenizer.get_vocab_size()
 
         embedding_layer = torch.nn.Embedding(
             vocab_size,
