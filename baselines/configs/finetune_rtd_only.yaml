@@ -1,0 +1,46 @@
+training:
+  num_epochs: 20
+  batch_size: 32
+  learning_rate: 0.00003
+  weight_decay: 0.01
+  validate_every: 1
+  log_every: 100
+  early_stopping_patience: 3
+
+data:
+  max_length: 256
+
+task:
+  name: SST2
+
+tasks:
+  SST2:
+    num_labels: 2
+    type: classification
+  MRPC:
+    num_labels: 2
+    type: classification
+  QQP:
+    num_labels: 2
+    type: classification
+  QNLI:
+    num_labels: 2
+    type: classification
+  RTE:
+    num_labels: 2
+    type: classification
+  CoLA:
+    num_labels: 2
+    type: classification
+  MNLI:
+    num_labels: 3
+    type: classification
+  STSB:
+    num_labels: 1
+    type: regression
+
+token:
+  special_token_ids: [0, 1, 2, 3]
+
+checkpoint:
+  pretrained_path: outputs/baselines/rtd_only/checkpoint_step_100000.pt

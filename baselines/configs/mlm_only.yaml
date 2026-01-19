@@ -1,0 +1,29 @@
+# Baseline 3: MLM Only
+# Standard BERT-style masked language modeling
+# Uses discriminator size (large model)
+
+encoder:
+  num_layers: 12
+  d_model: 768
+  num_heads: 12
+  head_dim: 64
+  d_ffn: 3072
+  dropout: 0.1
+
+training:
+  max_steps: 100000
+  batch_size: 64
+  learning_rate: 0.0005
+  weight_decay: 0.01
+  warmup_steps: 10000
+  gradient_clipping: 1.0
+  validate_every: 10000
+  log_every: 100
+  mlm_probability: 0.15  # Standard BERT masking rate
+
+data:
+  max_length: 256
+
+token:
+  mask_token_id: 4
+  special_token_ids: [0, 1, 2, 3]  # PAD, CLS, SEP, UNK

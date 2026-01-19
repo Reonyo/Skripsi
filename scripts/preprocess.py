@@ -209,7 +209,7 @@ def preprocess_glue_task(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", choices=["pretrain", "finetune"], required=True)
-    parser.add_argument("--max_length", type=int, default=128)
+    parser.add_argument("--max_length", type=int, default=256)
     parser.add_argument("--tokenizer_dir", default="data/tokenizer")
     args = parser.parse_args()
 

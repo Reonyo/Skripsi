@@ -1,0 +1,29 @@
+# Baseline 2: RTD Only
+# No generator/MLM task, only discriminator with RTD
+# Corrupted tokens are randomly sampled from vocab
+
+discriminator:
+  num_layers: 12
+  d_model: 768
+  num_heads: 12
+  head_dim: 64
+  d_ffn: 3072
+  dropout: 0.1
+
+training:
+  max_steps: 100000
+  batch_size: 64
+  learning_rate: 0.0005
+  weight_decay: 0.01
+  warmup_steps: 10000
+  gradient_clipping: 1.0
+  validate_every: 10000
+  log_every: 100
+  corruption_rate: 0.15  # Fraction of tokens to replace randomly
+
+data:
+  max_length: 256
+
+token:
+  mask_token_id: 4
+  special_token_ids: [0, 1, 2, 3]  # PAD, CLS, SEP, UNK

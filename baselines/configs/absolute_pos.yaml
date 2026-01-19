@@ -1,0 +1,40 @@
+# Baseline 1: Absolute Positional Encoding
+# Uses standard sinusoidal PE instead of RoPE
+# Otherwise identical to main ELECTRA model
+
+model:
+  discriminator:
+    num_layers: 12
+    d_model: 768
+    num_heads: 12
+    head_dim: 64
+    d_ffn: 3072
+    dropout: 0.1
+    max_len: 512
+
+  generator:
+    num_layers: 4
+    d_model: 256
+    num_heads: 4
+    head_dim: 64
+    d_ffn: 1024
+    dropout: 0.1
+    max_len: 512
+
+training:
+  max_steps: 100000
+  batch_size: 64
+  learning_rate: 0.0005
+  weight_decay: 0.01
+  warmup_steps: 10000
+  rtd_loss_weight: 1.0
+  gradient_clipping: 1.0
+  validate_every: 10000
+  log_every: 100
+
+data:
+  max_length: 256
+
+token:
+  mask_token_id: 4
+  special_token_ids: [0, 1, 2, 3]  # PAD, CLS, SEP, UNK
