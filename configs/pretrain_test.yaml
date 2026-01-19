@@ -1,0 +1,16 @@
+training:
+  num_epochs: 1
+  batch_size: 8
+  learning_rate: 0.0005 
+  weight_decay: 0.01
+  warmup_steps: 10      
+  rtd_loss_weight: 1.0
+  gradient_clipping: 1.0
+  validate_every: 5     # validasi setiap 5 steps
+
+data:
+  max_length: 128
+  max_samples: 1000      # jumlah train samples untuk test
+  max_val_samples: 200   # jumlah val samples untuk test
+  mask_token_id: 4
+  special_token_ids: [0, 1, 2, 3]  # PAD, CLS, SEP, UNK

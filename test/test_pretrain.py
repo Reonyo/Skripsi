@@ -1,7 +1,11 @@
+import sys
+from pathlib import Path
 import yaml
 import torch
 from torch.utils.data import DataLoader
-from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT_DIR))
 
 from training.pretrain import pretrain
 from models.generator import Generator
@@ -15,28 +19,28 @@ def load_yaml(path):
 
 
 def main():
-    # ======================================================
-    # DEVICE
-    # ======================================================
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("=== TEST PRETRAIN MODE ===")
+
+    device = torch.device("cpu")
     print(f"Using device: {device}")
 
-    # ======================================================
-    # LOAD CONFIG
-    # ======================================================
-    model_cfg = load_yaml("configs/model.yaml")
-    train_cfg = load_yaml("configs/pretrain.yaml")
+    model_cfg = load_yaml(
+        r"C:\Users\MyBook Hype AMD\Documents\GitHub\Skripsi\configs\model_test.yaml"
+    )
+    train_cfg = load_yaml(
+        r"C:\Users\MyBook Hype AMD\Documents\GitHub\Skripsi\configs\pretrain_test.yaml"
+    )
 
     gen_cfg = model_cfg["generator"]
     disc_cfg = model_cfg["discriminator"]
 
     train_params = train_cfg["training"]
     data_params = train_cfg["data"]
-    token_params = train_cfg["token"]
+    
+    # Extract token params from data_params
+    mask_token_id = data_params.get("mask_token_id", 4)
+    special_token_ids = data_params.get("special_token_ids", [0, 1, 2, 3])
 
-    # ======================================================
-    # DATASET
-    # ======================================================
     train_dataset = PretrainDataset(
         data_path="data/pretrain/processed/train.pt",
         max_length=data_params["max_length"],
@@ -46,6 +50,12 @@ def main():
         data_path="data/pretrain/processed/val.pt",
         max_length=data_params["max_length"],
     )
+
+    # kecilkan data
+    train_dataset.input_ids = train_dataset.input_ids[:50]
+    train_dataset.attention_mask = train_dataset.attention_mask[:50]
+    val_dataset.input_ids = val_dataset.input_ids[:20]
+    val_dataset.attention_mask = val_dataset.attention_mask[:20]
 
     train_loader = DataLoader(
         train_dataset,
@@ -59,32 +69,23 @@ def main():
         shuffle=False,
     )
 
-    # ======================================================
-    # EMBEDDING
-    # ======================================================
     vocab_size = train_dataset.vocab_size
 
     gen_embedding = torch.nn.Embedding(
         vocab_size,
         gen_cfg["d_model"],
-        padding_idx=token_params["special_token_ids"][0],
+        padding_idx=special_token_ids[0],
     )
 
     disc_embedding = torch.nn.Embedding(
         vocab_size,
         disc_cfg["d_model"],
-        padding_idx=token_params["special_token_ids"][0],
+        padding_idx=special_token_ids[0],
     )
 
-    # ======================================================
-    # MODEL
-    # ======================================================
     generator = Generator(vocab_size=vocab_size, **gen_cfg)
     discriminator = Discriminator(**disc_cfg)
 
-    # ======================================================
-    # PRETRAIN
-    # ======================================================
     pretrain(
         generator=generator,
         discriminator=discriminator,
@@ -93,18 +94,20 @@ def main():
         dataloader=train_loader,
         val_dataloader=val_loader,
         vocab_size=vocab_size,
-        mask_token_id=token_params["mask_token_id"],
-        special_token_ids=token_params["special_token_ids"],
+        mask_token_id=mask_token_id,
+        special_token_ids=special_token_ids,
         device=device,
         num_epochs=train_params["num_epochs"],
         learning_rate=train_params["learning_rate"],
         weight_decay=train_params["weight_decay"],
         warmup_steps=train_params["warmup_steps"],
         rtd_loss_weight=train_params["rtd_loss_weight"],
-        validate_every=train_params.get("validate_every", 10_000),
-        log_every=train_params.get("log_every", 100),  # Log every 100 steps by default
-        output_dir="outputs/pretrain",
+        validate_every=train_params["validate_every"],
+        log_every=2,  # Log every 2 steps for testing (main will use 100)
+        output_dir="test/outputs/test_pretrain",
     )
+
+    print("✅ TEST PRETRAIN SELESAI")
 
 
 if __name__ == "__main__":

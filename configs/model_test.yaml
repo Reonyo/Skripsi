@@ -1,0 +1,15 @@
+generator:
+  num_layers: 1
+  d_model: 32
+  num_heads: 2
+  head_dim: 16
+  d_ffn: 128
+  dropout: 0.1
+
+discriminator:
+  num_layers: 1
+  d_model: 64
+  num_heads: 4
+  head_dim: 16
+  d_ffn: 256
+  dropout: 0.1
