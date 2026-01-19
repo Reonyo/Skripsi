@@ -11,7 +11,7 @@ data:
   max_length: 256
 
 task:
-  name: SST2              # default task, bisa diganti ke task lain di bawah
+  name: ALL              # jalankan semua 8 task GLUE (atau ganti ke salah satu)
 
 # Daftar semua task GLUE beserta jumlah label
 tasks:
