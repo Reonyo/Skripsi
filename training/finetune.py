@@ -40,8 +40,8 @@ def finetune(
     - Linear layer di atas [CLS] representation
     
     Early Stopping:
-    - Monitor validation loss
-    - Stop jika loss tidak improve selama `early_stopping_patience` epoch
+    - Monitor primary task metric (accuracy, MCC, or Pearson correlation)
+    - Stop if metric doesn't improve for `early_stopping_patience` epochs
     - Max epoch tetap num_epochs
     """
 
@@ -50,7 +50,21 @@ def finetune(
     # ==================================================
     # EARLY STOPPING TRACKING
     # ==================================================
-    best_val_loss = float('inf')
+    # Determine primary metric for each task
+    if task_name == "STSB":
+        # Regression task - use Pearson correlation (higher is better)
+        metric_mode = "max"
+        metric_name = "val_pearson"
+    elif task_name == "CoLA":
+        # MCC is the primary metric for CoLA (higher is better)
+        metric_mode = "max"
+        metric_name = "val_mcc"
+    else:
+        # For other tasks, use accuracy (higher is better)
+        metric_mode = "max"
+        metric_name = "val_accuracy"
+    
+    best_metric = float('-inf') if metric_mode == "max" else float('inf')
     patience_counter = 0
 
     # ==================================================
@@ -234,16 +248,24 @@ def finetune(
 
             print(
                 f"[VAL] Epoch {epoch+1} | "
-                f"Loss: {avg_val_loss:.4f}"
+                f"Loss: {avg_val_loss:.4f} | "
+                f"{metric_name}: {metrics[metric_name]:.4f}"
             )
 
             # ==================================================
             # EARLY STOPPING CHECK
             # ==================================================
-            if avg_val_loss < best_val_loss:
-                best_val_loss = avg_val_loss
+            current_metric = metrics[metric_name]
+            
+            if metric_mode == "max":
+                is_better = current_metric > best_metric
+            else:
+                is_better = current_metric < best_metric
+            
+            if is_better:
+                best_metric = current_metric
                 patience_counter = 0
-                print(f"  [IMPROVE] Val loss improved to {best_val_loss:.4f}")
+                print(f"  [IMPROVE] {metric_name} improved to {best_metric:.4f}")
             else:
                 patience_counter += 1
                 print(f"  [NO IMPROVE] Patience: {patience_counter}/{early_stopping_patience}")
